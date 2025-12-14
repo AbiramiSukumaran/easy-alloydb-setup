@@ -14,13 +14,15 @@
 
 #!/bin/bash
 
+#!/bin/bash
+
 echo "🔧 Setting up the AlloyDB Provisioner..."
 
 # 1. Ensure the creation script is executable
 chmod +x create_alloydb.sh
 
-# 2. Install Flask (if not already present in the session)
-pip install -r requirements.txt --quiet
+# 2. Install Flask (swallows errors if dependencies conflict, to use pre-installed versions)
+pip install -r requirements.txt --quiet || echo "⚠️ Dependency warning: Attempting to run with existing packages..."
 
 echo "✅ Setup complete."
 echo "🚀 Starting Server on Port 8080..."
