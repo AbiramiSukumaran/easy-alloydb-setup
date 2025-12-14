@@ -1,23 +1,27 @@
 ## AlloyDB Easy Setup for Development Purposes
 This tool helps you link a billing account and spin up an AlloyDB Cluster + Instance (with all other API & network dependencies) using your active Google Cloud credentials.
 
+### Start the process
 
-1. Make sure this repo is cloned in your Google Cloud Shell Editor or 
-you can do so by running the following command in the Cloud Shell command line terminal:
+#### Option A: One-Click (Recommended)
+1. Click the "Open in Cloud Shell" button. 
+It will open a new tab, clone the repository, and enter the directory automatically.
 
- ### git clone https://github.com/AbiramiSukumaran/easy-alloydb-setup
+[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/AbiramiSukumaran/easy-alloydb-setup&cloudshell_open_in_editor=README.md&cloudshell_print=sh%20run.sh)
 
+3. Run the Start Script:
+In the Cloud Shell Terminal at the bottom, type the following and hit Enter:
 
-2. 🚀 Navigate into the project
+sh run.sh
 
-### cd easy-alloydb-setup
+#### Option B: Manual Run
+If you prefer to run commands manually in your existing terminal:
 
-3. Run the start script:
+git clone https://github.com/AbiramiSukumaran/easy-alloydb-setup
+cd easy-alloydb-setup
+sh run.sh
 
-### sh run.sh
-
-
-4. 🖥️ Access the UI for setup
+## 🖥️ Access the UI for setup
 
 Once the script prints "Starting Server on Port 8080"...
 
@@ -25,9 +29,8 @@ Click the Web Preview button (looks like an eye 👁️) in the Cloud Shell tool
 
 Select "Preview on port 8080".
 
-## Alternatively:
 
-[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/AbiramiSukumaran/easy-alloydb-setup&cloudshell_open_in_editor=README.md&cloudshell_print=sh%20run.sh)
+
 
 ⚠️⚠️⚠️ Requirements
 
