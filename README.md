@@ -28,7 +28,7 @@ Select "Preview on port 8080".
 
 
 
-#### Alternative manual commands for above steps:
+## Alternative manual commands for above steps:
 
 1. Run commands in your Cloud Shell Terminal one by one:
 
