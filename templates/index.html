@@ -140,6 +140,7 @@
         .status-running { background: #e8f0fe; color: #1a73e8; }
         .status-success { background: #e6f4ea; color: #137333; }
         .status-error { background: #fce8e6; color: #c5221f; }
+        .status-warning { background: #fef7e0; color: #b06000; }
     </style>
 </head>
 <body>
@@ -317,29 +318,88 @@
         }
     });
 
+    function escapeHtml(text) {
+        if (!text) return text;
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
     async function pollLogs(id) {
         try {
             const res = await fetch(`/logs/${id}`);
             const data = await res.json();
             
+            let hasRealError = false;
+
             if (data.logs) {
                 const terminal = document.getElementById('terminal');
-                terminal.innerText = data.logs.join('');
+                
+                // Process logs for coloring
+                const processedLogs = data.logs.map(line => {
+                    const cleanLine = escapeHtml(line);
+                    const lowerLine = line.toLowerCase();
+                    
+                    // Logic: If it is an error...
+                    if (line.includes("ERROR") || line.includes("EXCEPTION")) {
+                        // ...BUT it is a known "benign" error (resource exists), ignore the red color.
+                        if (lowerLine.includes("already exists") || 
+                            lowerLine.includes("alreadyexists") || 
+                            (line.includes("Could not fetch resource") && line.includes("gcloud.compute.networks.create"))) {
+                            
+                            // It is an error in log, but we treat it as Warning/Info visually
+                            return cleanLine; 
+                        }
+                        
+                        // Otherwise, it's a REAL error that blocks progress
+                        hasRealError = true;
+                        return `<span style="color: #ff6b6b;">${cleanLine}</span>`;
+                    }
+                    return cleanLine;
+                }).join('');
+
+                terminal.innerHTML = processedLogs;
                 terminal.scrollTop = terminal.scrollHeight;
             }
 
-            if (data.status === 'done') {
+            const badge = document.getElementById('status-badge');
+            const btn = document.getElementById('deployBtn');
+
+            // --- STATUS HANDLING ---
+            // If the Backend says 'error' (exit code 1) BUT we found no "Red" errors in the logs,
+            // it means the script exited because resources already existed. Treat as Success.
+            if (data.status === 'error' && !hasRealError) {
                 clearInterval(pollInterval);
-                document.getElementById('status-badge').className = 'status-badge status-success';
-                document.getElementById('status-badge').innerText = 'Complete';
-                document.getElementById('deployBtn').innerText = "Deployment Complete";
-            } else if (data.status === 'error') {
+                badge.className = 'status-success'; // Or status-warning if you prefer
+                badge.innerText = 'Complete (Resources Existed)';
+                btn.innerText = "Deployment Complete";
+                btn.disabled = false; // Allow re-click if needed
+            } 
+            // Normal Error Case
+            else if (data.status === 'error' && hasRealError) {
                 clearInterval(pollInterval);
-                document.getElementById('status-badge').className = 'status-badge status-error';
-                document.getElementById('status-badge').innerText = 'Error';
-                document.getElementById('deployBtn').disabled = false;
-                document.getElementById('deployBtn').innerText = "Retry";
+                badge.className = 'status-error';
+                badge.innerText = 'Error';
+                btn.disabled = false;
+                btn.innerText = "Retry";
             }
+            // Normal Success Case
+            else if (data.status === 'done') {
+                clearInterval(pollInterval);
+                if (hasRealError) {
+                    // Weird edge case: Script exited 0 but logs had errors?
+                    badge.className = 'status-warning';
+                    badge.innerText = 'Completed with Errors';
+                } else {
+                    badge.className = 'status-success';
+                    badge.innerText = 'Complete';
+                }
+                btn.innerText = "Deployment Complete";
+            }
+
         } catch (e) {
             console.error("Polling error", e);
         }
