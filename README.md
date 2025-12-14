@@ -2,15 +2,18 @@
 This tool helps you link a billing account and spin up an AlloyDB Cluster + Instance (with all other API & network dependencies) using your active Google Cloud credentials.
 
 ## Start the process
-If you have already landed in the terminal and cloned the repo, then, just run the following command in your terminal from the project  folder:
+If you have already landed in the terminal and cloned the repo, then just
+
+1. Run the following command in your terminal from the project  folder:
 
 #### sh run.sh
 
-#### Next step, access the web UI for AlloyDB set up.
+2. Next step, access the web UI for AlloyDB set up.
 
-But if you're yet to clone the repo:
+## But if you're yet to clone the repo:
 
-#### Option A: One-Click (Recommended)
+#### Option A: One-Click 
+
 1. Click the "Open in Cloud Shell" button.
    
 It will open a new tab, clone the repository, and enter the directory automatically.
