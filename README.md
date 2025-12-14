@@ -20,14 +20,15 @@ It will open a new tab, clone the repository, and enter the directory automatica
 
 [![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/AbiramiSukumaran/easy-alloydb-setup&cloudshell_open_in_editor=README.md&cloudshell_print=sh%20run.sh)
 
-3. Run the Start Script:
+2. Run the Start Script:
    
 In the Cloud Shell Terminal at the bottom, type the following and hit Enter:
 
 sh run.sh
 
 #### Option B: Manual Run
-If you prefer to run commands manually in your existing terminal:
+
+If you prefer to run commands manually in your existing terminal one by one:
 
 git clone https://github.com/AbiramiSukumaran/easy-alloydb-setup
 
