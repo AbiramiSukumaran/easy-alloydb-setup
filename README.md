@@ -1,19 +1,19 @@
 # AlloyDB Easy Setup for Development Purposes
 This tool helps you link a billing account and spin up an AlloyDB Cluster + Instance (with all other API & network dependencies) using your active Google Cloud credentials.
 
-## Clone the Repo & Navigate into the project directory
+## Clone the Repo
    
 It will open a new tab (make sure you are in the right email account), clone the repository, and enter the directory automatically.
 
 [![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://ssh.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/AbiramiSukumaran/easy-alloydb-setup&cloudshell_open_in_editor=README.md)
 
-## Run:
+## Run
    
 In the Cloud Shell Terminal at the bottom, type the following and hit Enter:
 
 sh run.sh
 
-## That's it!!! Access it on web
+## Access UI!
 
 Once the script prints "Starting Server on Port 8080"...
 
