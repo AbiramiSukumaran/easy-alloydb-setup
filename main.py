@@ -29,6 +29,7 @@ deployments = {}
 def run_billing_link(project_id):
     """
     Attempts to find an open billing account and link the project to it.
+    REQUIREMENT: Must find an account named exactly "Google Cloud Platform Trial Billing Account".
     Returns (success_bool, message).
     """
     try:
@@ -40,13 +41,26 @@ def run_billing_link(project_id):
         if not accounts:
             return False, "No open billing accounts found for this user."
 
-        # 2. Pick the first one (assuming it's the 'active' one the user intends)
-        # To find 'most recently added' isn't standard in the list output, 
-        # so we default to the first available open account.
-        acct_id = accounts[0]['name'].split('/')[-1] # format usually billingAccounts/ID
-        acct_display = accounts[0].get('displayName', acct_id)
+        # 2. Strict Search for "Google Cloud Platform Trial Billing Account"
+        target_account = None
+        target_name = "Google Cloud Platform Trial Billing Account"
+        
+        for acct in accounts:
+            # Exact string match
+            if acct.get('displayName') == target_name:
+                target_account = acct
+                break
+        
+        # 3. Handle Not Found (No fallback)
+        if not target_account:
+            return False, f"Error: Could not find a billing account named '{target_name}'. Please ensure you have an active trial account with this exact name."
 
-        # 3. Link project
+        print(f"DEBUG: Found and selected Trial Account: {target_account.get('displayName')}")
+
+        acct_id = target_account['name'].split('/')[-1] # format usually billingAccounts/ID
+        acct_display = target_account.get('displayName', acct_id)
+
+        # 4. Link project
         link_cmd = [
             "gcloud", "billing", "projects", "link", project_id,
             f"--billing-account={acct_id}"
