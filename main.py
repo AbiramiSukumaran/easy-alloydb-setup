@@ -26,10 +26,11 @@ app = Flask(__name__)
 # Format: { 'deploy_id': {'logs': [], 'status': 'running'|'done'|'error'} }
 deployments = {}
 
-def run_billing_link(project_id):
+def run_billing_link(project_id, user_billing_name=None):
     """
     Attempts to find an open billing account and link the project to it.
-    REQUIREMENT: Must find an account named exactly "Google Cloud Platform Trial Billing Account".
+    If user_billing_name is provided, looks for that specific name (partial match).
+    Otherwise, defaults to looking for 'Google Cloud Platform Trial Billing Account'.
     Returns (success_bool, message).
     """
     try:
@@ -41,26 +42,35 @@ def run_billing_link(project_id):
         if not accounts:
             return False, "No open billing accounts found for this user."
 
-        # 2. Strict Search for "Google Cloud Platform Trial Billing Account"
+        # 2. Determine Target Name
         target_account = None
-        target_name = "Google Cloud Platform Trial Billing Account"
         
+        if user_billing_name and user_billing_name.strip():
+            # User specified a name
+            target_name = user_billing_name.strip()
+            print(f"DEBUG: Searching for user-specified billing account containing: '{target_name}'")
+        else:
+            # Default behavior
+            target_name = "Google Cloud Platform Trial Billing Account"
+            print(f"DEBUG: Searching for default trial billing account: '{target_name}'")
+        
+        # 3. Search for the account
         for acct in accounts:
-            # Exact string match
+            # Exact match
             if acct.get('displayName') == target_name:
                 target_account = acct
                 break
         
-        # 3. Handle Not Found (No fallback)
+        # 4. Handle Not Found
         if not target_account:
-            return False, f"Error: Could not find a billing account named '{target_name}'. Please ensure you have an active trial account with this exact name."
+            return False, f"Error: Could not find a billing account matching '{target_name}'. Please check the name or ensure you have access."
 
-        print(f"DEBUG: Found and selected Trial Account: {target_account.get('displayName')}")
+        print(f"DEBUG: Found and selected Billing Account: {target_account.get('displayName')}")
 
         acct_id = target_account['name'].split('/')[-1] # format usually billingAccounts/ID
         acct_display = target_account.get('displayName', acct_id)
 
-        # 4. Link project
+        # 5. Link project
         link_cmd = [
             "gcloud", "billing", "projects", "link", project_id,
             f"--billing-account={acct_id}"
@@ -141,10 +151,12 @@ def get_regions():
 @app.route('/link-billing', methods=['POST'])
 def link_billing():
     project_id = request.form.get('project_id')
+    billing_name = request.form.get('billing_account_name') # Get optional input
+    
     if not project_id:
         return jsonify({'status': 'error', 'message': 'Project ID is required'})
 
-    success, msg = run_billing_link(project_id)
+    success, msg = run_billing_link(project_id, billing_name)
     return jsonify({
         'status': 'success' if success else 'error',
         'message': msg
