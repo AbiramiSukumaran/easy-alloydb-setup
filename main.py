@@ -84,6 +84,26 @@ def run_billing_link(project_id, user_billing_name=None):
     except Exception as e:
         return False, str(e)
 
+def generate_deployment_summary(project, region, cluster, instance):
+    """Generate a structured summary with connection details and next steps."""
+    summary = {
+        "connection": {
+            "project_id": project,
+            "region": region,
+            "cluster_name": cluster,
+            "instance_name": instance,
+            "database_user": "postgres",
+            "database_port": "5432",
+            "network": "easy-alloydb-vpc",
+            "subnet": "easy-alloydb-subnet"
+        },
+        "commands": {
+            "get_ip": f"gcloud alloydb instances describe {instance} \\\n  --cluster={cluster} \\\n  --region={region} \\\n  --format=\"get(ipAddress)\""
+        }
+    }
+    return summary
+
+
 def run_gcloud_script(deploy_id, project, region, password, cluster, instance):
     """Runs the shell script and streams output to global storage."""
     
@@ -109,10 +129,24 @@ def run_gcloud_script(deploy_id, project, region, password, cluster, instance):
         
         if process.returncode == 0:
             deployments[deploy_id]['status'] = 'done'
-            deployments[deploy_id]['logs'].append("\nSUCCESS: Deployment finished.\n")
+            deployments[deploy_id]['logs'].append("\nDeployment Complete. Check Console.\n")
+            # Store the summary data for frontend
+            deployments[deploy_id]['summary'] = generate_deployment_summary(project, region, cluster, instance)
         else:
-            deployments[deploy_id]['status'] = 'error'
-            deployments[deploy_id]['logs'].append(f"\nERROR: Script exited with code {process.returncode}\n")
+            # Check if this is a "benign" error (resources already exist)
+            log_text = ''.join(deployments[deploy_id]['logs']).lower()
+            resources_exist = ('already exists' in log_text or 
+                             'alreadyexists' in log_text or
+                             'creating cluster...' in log_text)  # Progress indicates partial success
+            
+            if resources_exist:
+                deployments[deploy_id]['status'] = 'error'  # Frontend handles this specially
+                deployments[deploy_id]['logs'].append("\nNote: Some resources may already exist. Check console for details.\n")
+                # Still provide the summary since resources are likely available
+                deployments[deploy_id]['summary'] = generate_deployment_summary(project, region, cluster, instance)
+            else:
+                deployments[deploy_id]['status'] = 'error'
+                deployments[deploy_id]['logs'].append(f"\nERROR: Script exited with code {process.returncode}\n")
 
     except Exception as e:
         deployments[deploy_id]['status'] = 'error'
@@ -189,10 +223,69 @@ def get_logs(deploy_id):
     if deploy_id not in deployments:
         return jsonify({'error': 'Not found'}), 404
     
-    return jsonify({
+    response = {
         'logs': deployments[deploy_id]['logs'],
         'status': deployments[deploy_id]['status']
-    })
+    }
+    
+    # Include summary if available
+    if 'summary' in deployments[deploy_id]:
+        response['summary'] = deployments[deploy_id]['summary']
+    
+    return jsonify(response)
+
+@app.route('/run-command', methods=['POST'])
+def run_command():
+    """Execute specific predefined commands and return the output."""
+    command_type = request.form.get('command_type')
+    
+    # Get parameters
+    project = request.form.get('project_id')
+    region = request.form.get('region')
+    cluster = request.form.get('cluster')
+    instance = request.form.get('instance')
+    
+    try:
+        if command_type == 'get_ip':
+            # Get AlloyDB instance private IP
+            cmd = [
+                'gcloud', 'alloydb', 'instances', 'describe', instance,
+                f'--cluster={cluster}',
+                f'--region={region}',
+                f'--project={project}',
+                '--format=get(ipAddress)'
+            ]
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            
+            if result.returncode == 0:
+                ip = result.stdout.strip()
+                return jsonify({
+                    'status': 'success',
+                    'output': ip,
+                    'message': f'Private IP: {ip}'
+                })
+            else:
+                return jsonify({
+                    'status': 'error',
+                    'output': result.stderr,
+                    'message': 'Failed to get IP address'
+                })
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Unknown command type'
+            })
+            
+    except subprocess.TimeoutExpired:
+        return jsonify({
+            'status': 'error',
+            'message': 'Command timed out'
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        })
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0', port=8080)
