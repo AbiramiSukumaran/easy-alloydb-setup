@@ -50,3 +50,5 @@ sh run.sh
 Permissions: You must have Owner or Editor permissions on the Google Cloud Project you intend to deploy to.
 
 Project: The project must be created before running this tool (the tool handles billing linking, but not project creation).
+
+##### Note: All these steps are listed in detail in this [codelab]([url(https://codelabs.developers.google.com/quick-alloydb-setup)).
