@@ -12,7 +12,9 @@ It will open a new tab (make sure you are in the right email account), clone the
    
 In the Cloud Shell Terminal at the bottom, type the following and hit Enter:
 
-#### sh run.sh
+``` bash
+sh run.sh
+```
 
 
 ## Access UI!
@@ -32,13 +34,13 @@ Select "Preview on port 8080".
 
 1. Run commands in your Cloud Shell Terminal one by one:
 
+``` bash
 git clone https://github.com/AbiramiSukumaran/easy-alloydb-setup
-
 cd easy-alloydb-setup
-
 sh run.sh
+```
 
-2. Access UI!
+2. You should be able to see the url for the app running locally. Access UI by clicking that link!
 
 
 
